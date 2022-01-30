@@ -1,0 +1,32 @@
+{
+  "name": "examples-vivliostyle-sitegen",
+  "description": "Examples for vivliostyle-sitegen.",
+  "version": "1.0.0",
+  "author": "Vivliostyle Foundation",
+  "license": "Apache-2.0",
+  "private": true,
+  "main": "index.js",
+  "keywords": [
+    "SSG",
+    "VFM",
+    "Vivliostyle"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vivliostyle/vivliostyle-sitegen.git"
+  },
+  "homepage": "https://github.com/vivliostyle/vivliostyle-sitegen#readme",
+  "bugs": {
+    "url": "https://github.com/vivliostyle/vivliostyle-sitegen/issues"
+  },
+  "scripts": {
+    "start": "vivliostyle-sitegen --dev",
+    "help": "vivliostyle-sitegen",
+    "ts": "ts-node index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^16.11.9",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.2"
+  }
+}
