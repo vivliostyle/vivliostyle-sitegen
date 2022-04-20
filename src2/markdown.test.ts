@@ -1,7 +1,9 @@
 import { createMetadata, createHtml } from './markdown';
 
 it('<link> for CSS', () => {
-  const metadata = createMetadata('', '/blog/2022/04/', ['/style.css'], []);
+  const metadata = createMetadata('', '/blog/2022/04/', {
+    styleSheets: ['/style.css'],
+  });
   const expected = {
     link: [
       [
@@ -14,7 +16,9 @@ it('<link> for CSS', () => {
 });
 
 it('<script> for JavaScript', () => {
-  const metadata = createMetadata('', '/blog/2022/03/', [], ['/app.js']);
+  const metadata = createMetadata('', '/blog/2022/03/', {
+    scripts: ['/app.js'],
+  });
   const expected = {
     script: [
       [
@@ -34,7 +38,7 @@ title: "Sample Page"
 
 Text
 `;
-  const metadata = createMetadata(md, '/', [], []);
+  const metadata = createMetadata(md, '/');
   const html = createHtml(md, metadata);
   const expected = `<!doctype html>
 <html>
@@ -60,7 +64,7 @@ date: "2022-04-18"
   
 Text
 `;
-  const metadata = createMetadata(md, '/', [], [], ['date']);
+  const metadata = createMetadata(md, '/', { customKeys: ['date'] });
   const template = `<article>
 <header><h1><%- site.title %></h1></header>
 <div><span class="date"><%- metadata.custom.date %></span></div>

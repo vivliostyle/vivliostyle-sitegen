@@ -1,12 +1,32 @@
 import path from 'node:path';
 import ejs from 'ejs';
-import { readMetadata, stringify, Metadata, Attribute } from '@vivliostyle/vfm';
+import type { Metadata, Attribute } from '@vivliostyle/vfm';
+import { readMetadata, stringify } from '@vivliostyle/vfm';
 
 /**
  * Placeholder that indicates a content part when processing HTML templates.
  * The replacement target is specified directly under `<body>` in HTML.
  */
 const BODY_HTML_PLACEHOLDER = '4bd5d00d-52a6-12c5-7ba7-3b7ac0b352e6';
+
+/**
+ * Options of `createMetadata`.
+ */
+export type CreateMetadataOptions = {
+  /**
+   * Path collection of CSS files referenced as relative paths from the page.
+   */
+  styleSheets?: string[];
+  /**
+   * Path collection of JavaScript files referenced as relative paths from the page.
+   */
+  scripts?: string[];
+  /**
+   * A collection of key names to be ignored by HTML processing in VFM frontmatter.
+   * Keys specified here are not processed as HTML tags, but are stored in `custom` in `Metadata`.
+   */
+  customKeys?: string[];
+};
 
 /**
  * Create `<link>` metadata of VFM.
@@ -54,21 +74,21 @@ const createScriptsMetadata = (
 
 /**
  * Create metadata of VFM.
- * @param md - Markdown string.
+ * @param markdown - Markdown string.
  * @param baseDir - The directory of the HTML file on which the relative path is based.
- * @param styleSheets - Path collection of CSS files referenced as relative paths from the page.
- * @param scripts - Path collection of JavaScript files referenced as relative paths from the page.
- * @param customKeys - A collection of key names to be ignored by meta processing.
+ * @param options - Options
  * @returns Metadata.
  */
 export const createMetadata = (
-  md: string,
+  markdown: string,
   baseDir: string,
-  styleSheets: string[],
-  scripts: string[],
-  customKeys: string[] = [],
+  {
+    styleSheets = [],
+    scripts = [],
+    customKeys = undefined,
+  }: CreateMetadataOptions = {},
 ): Metadata => {
-  const metadata = readMetadata(md, customKeys);
+  const metadata = readMetadata(markdown, customKeys);
 
   const linksMetadata = createStyleSheetsMetadata(baseDir, styleSheets);
   if (0 < linksMetadata.length) {
@@ -98,13 +118,13 @@ export const createMetadata = (
  * - `metadata`: The `metadata` argument specified for this function.
  * - `site`: The `site` argument specified for this function.
  * - `html`: HTML created from Markdown text.
- * @param md - Markdown string.
+ * @param markdown - Markdown string.
  * @param metadata - Metadata of VFM.
  * @param template - Template string of EJS.
  * @param site - User data of the web site.
  */
 export const createHtml = (
-  md: string,
+  markdown: string,
   metadata: Metadata,
   template: string = '',
   site: object = {},
@@ -114,11 +134,11 @@ export const createHtml = (
     const bodyHtml = ejs.render(template, {
       metadata,
       site,
-      html: stringify(md, { partial: true }),
+      html: stringify(markdown, { partial: true }),
     });
 
     return pageHtml.replace(`<p>${BODY_HTML_PLACEHOLDER}</p>`, bodyHtml);
   }
 
-  return stringify(md, {}, metadata);
+  return stringify(markdown, {}, metadata);
 };
