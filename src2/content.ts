@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Metadata } from '@vivliostyle/vfm';
-import type { CreateMetadataOptions } from './markdown';
+import type { CreateMetadataOptions, CreateMetadataParams } from './markdown';
 import { createMetadata } from './markdown';
 
 /**
@@ -64,7 +64,7 @@ export const createContent = async (
   markdownFilePath: string,
   pagesRootDir: string,
   destRootDir: string,
-  metadataOptions?: CreateMetadataOptions,
+  metadataOptions: CreateMetadataOptions = {},
 ): Promise<Content> => {
   const markdown = await fs.readFile(markdownFilePath, 'utf-8');
   const htmlFilePath = createDestFilePath(
@@ -74,11 +74,14 @@ export const createContent = async (
     '.html',
   );
 
-  const metadata = createMetadata(
-    markdown,
-    path.dirname(htmlFilePath),
-    metadataOptions,
-  );
+  const metadataParams: CreateMetadataParams = {
+    baseDir: path.dirname(htmlFilePath),
+    styleSheets: metadataOptions.styleSheets || undefined,
+    scripts: metadataOptions.scripts || undefined,
+    customKeys: metadataOptions.customKeys || undefined,
+  };
+
+  const metadata = createMetadata(markdown, metadataParams);
 
   return {
     markdownFilePath,

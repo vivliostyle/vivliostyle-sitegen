@@ -10,7 +10,7 @@ import { readMetadata, stringify } from '@vivliostyle/vfm';
 const BODY_HTML_PLACEHOLDER = '4bd5d00d-52a6-12c5-7ba7-3b7ac0b352e6';
 
 /**
- * Options of `createMetadata`.
+ * Options of the creation metadata..
  */
 export type CreateMetadataOptions = {
   /**
@@ -26,6 +26,16 @@ export type CreateMetadataOptions = {
    * Keys specified here are not processed as HTML tags, but are stored in `custom` in `Metadata`.
    */
   customKeys?: string[];
+};
+
+/**
+ * Parameters of `createMetadata`.
+ */
+export type CreateMetadataParams = CreateMetadataOptions & {
+  /**
+   * The directory of the HTML file on which the relative path is based.
+   */
+  baseDir?: string;
 };
 
 /**
@@ -76,35 +86,32 @@ const createScriptsMetadata = (
  * Create metadata of VFM.
  * @param markdown - Markdown string.
  * @param baseDir - The directory of the HTML file on which the relative path is based.
- * @param options - Options
+ * @param options - Options.
  * @returns Metadata.
  */
 export const createMetadata = (
   markdown: string,
-  baseDir: string,
   {
+    baseDir = undefined,
     styleSheets = [],
     scripts = [],
     customKeys = undefined,
-  }: CreateMetadataOptions = {},
+  }: CreateMetadataParams = {},
 ): Metadata => {
   const metadata = readMetadata(markdown, customKeys);
-
-  const linksMetadata = createStyleSheetsMetadata(baseDir, styleSheets);
-  if (0 < linksMetadata.length) {
-    if (metadata.link) {
-      metadata.link = [...metadata.link, ...linksMetadata];
-    } else {
-      metadata.link = linksMetadata;
+  if (baseDir) {
+    const linksMetadata = createStyleSheetsMetadata(baseDir, styleSheets);
+    if (0 < linksMetadata.length) {
+      metadata.link = metadata.link
+        ? [...metadata.link, ...linksMetadata]
+        : linksMetadata;
     }
-  }
 
-  const scriptsMetadata = createScriptsMetadata(baseDir, scripts);
-  if (0 < scriptsMetadata.length) {
-    if (metadata.script) {
-      metadata.script = [...metadata.script, ...scriptsMetadata];
-    } else {
-      metadata.script = scriptsMetadata;
+    const scriptsMetadata = createScriptsMetadata(baseDir, scripts);
+    if (0 < scriptsMetadata.length) {
+      metadata.script = metadata.script
+        ? [...metadata.script, ...scriptsMetadata]
+        : scriptsMetadata;
     }
   }
 
