@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Metadata } from '@vivliostyle/vfm';
-import type { CreateMetadataOptions, CreateMetadataParams } from './markdown';
+import type { CreateMetadataOptions } from './markdown';
 import { createMetadata } from './markdown';
 
 /**
@@ -73,15 +73,12 @@ export const createContent = async (
     destRootDir,
     '.html',
   );
-
-  const metadataParams: CreateMetadataParams = {
+  const metadata = createMetadata(markdown, {
     baseDir: path.dirname(htmlFilePath),
     styleSheets: metadataOptions.styleSheets || undefined,
     scripts: metadataOptions.scripts || undefined,
     customKeys: metadataOptions.customKeys || undefined,
-  };
-
-  const metadata = createMetadata(markdown, metadataParams);
+  });
 
   return {
     markdownFilePath,
@@ -130,6 +127,7 @@ const createContentsRecursive = async (
         ),
       );
     } else {
+      // TODO: Copy file
     }
   }
 
