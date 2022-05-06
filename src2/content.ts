@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Metadata } from '@vivliostyle/vfm';
 import type { CreateMetadataOptions } from './markdown';
 import { createMetadata } from './markdown';
+import { createDestFilePath, copyFile } from './assets';
 
 /**
  * Content of the page.
@@ -24,32 +25,6 @@ export type Content = {
    * Markdown of the page.
    */
   markdown: string;
-};
-
-/**
- * Create the path of destination file.
- * @param srcFilePath - Path of the source file.
- * @param srcRootDir - Path of the source root directory.
- * @param destDirPath - Path of the destination root directory.
- * @param extname - Extension of the file to be changed. If not specified, the original extension will be used.
- * @returns Path of the destination file.
- */
-export const createDestFilePath = (
-  srcFilePath: string,
-  srcRootDir: string,
-  destDirPath: string,
-  extname?: string,
-) => {
-  const subPath = path.relative(srcRootDir, srcFilePath);
-  if (extname) {
-    return path.join(
-      destDirPath,
-      path.dirname(subPath),
-      `${path.basename(subPath, path.extname(subPath))}${extname}`,
-    );
-  } else {
-    return path.join(destDirPath, subPath);
-  }
 };
 
 /**
@@ -127,7 +102,7 @@ const createContentsRecursive = async (
         ),
       );
     } else {
-      // TODO: Copy file
+      await copyFile(itemPath, pagesRootDir, destRootDir);
     }
   }
 
