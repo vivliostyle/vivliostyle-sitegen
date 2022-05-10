@@ -1,4 +1,7 @@
 module.exports = {
+  srcPagesDir: 'pages',
+  srcAssetsDir: 'assets',
+  destDir: 'public',
   site: {
     title: 'Sample Site',
   },
