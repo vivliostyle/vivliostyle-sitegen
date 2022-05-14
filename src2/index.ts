@@ -5,6 +5,7 @@ import { createContents } from './content';
 import type { CreatePage } from './page';
 import { loadCreatePages } from './page';
 import { createHtml } from './markdown';
+import { copyAssets, safeMkdir } from './assets';
 
 /**
  * Parameters for `generateStaticSite`.
@@ -19,10 +20,23 @@ export type SiteGenParams = {
 };
 
 /**
+ * Initialize the destination directory.
+ * @param dir - Path of the destination (site distribution) directory.
+ * @returns `true` if successful, `false` otherwise.
+ */
+const initDestDir = (dir: string): boolean => {
+  if (fs.existsSync(dir)) {
+    fs.rmSync(dir, { recursive: true });
+  }
+
+  return safeMkdir(dir);
+};
+
+/**
  * Create page from content information.
  * @param params - Parameters.
  */
-const createPage: CreatePage = ({ content, template, site }) => {
+const createPage: CreatePage = ({ content, template, site }): void => {
   const html = createHtml(content.markdown, content.metadata, template, site);
   fs.writeFileSync(content.htmlFilePath, html);
 };
@@ -36,6 +50,10 @@ export const generateStaticSite = async ({
 }: SiteGenParams): Promise<void> => {
   const appRootDir = process.cwd();
   const config = loadConfig(path.join(appRootDir, 'vivliostyle.sitegen.js'));
+
+  initDestDir(config.destDir);
+  copyAssets(config.srcAssetsDir, config.destDir);
+
   const contents = await createContents(
     config.srcPagesDir,
     config.destDir,
