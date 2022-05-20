@@ -1,5 +1,25 @@
 import path from 'node:path';
 import fs from 'node:fs';
+import type { CssType } from './css';
+
+/**
+ * Configuration of the transpile AltCSS file to CSS.
+ */
+export type CssConfig = {
+  /**
+   * Type of CSS engine.
+   */
+  type: CssType;
+  /**
+   * Path of the AltCSS file.
+   */
+  src: string;
+  /**
+   * Path of the transpiled CSS file.
+   * Specify a path relative to the destination (site distribution) directory.
+   */
+  dest: string;
+};
 
 /**
  * Configuration of the vivliostyle-sitegen.
@@ -34,6 +54,10 @@ export type Config = {
    * Keys specified here are not processed as HTML tags, but are stored in `custom` in `Metadata`.
    */
   customKeys: string[];
+  /**
+   * Configuration for transpile CSS.
+   */
+  css?: CssConfig;
 };
 
 /**
@@ -54,6 +78,20 @@ const praseStringArray = (values: any): string[] => {
   }
 
   return result;
+};
+
+/**
+ * Check the CSS config.
+ * @param value - Value from user data.
+ * @returns Checked value. If the value is invalid, it is `undefined`.
+ */
+const checkCssConfig = (value: any): CssConfig | undefined => {
+  return typeof value === 'object' &&
+    typeof value.type === 'string' &&
+    typeof value.src === 'string' &&
+    typeof value.dest === 'string'
+    ? (value as CssConfig)
+    : undefined;
 };
 
 /**
@@ -117,6 +155,11 @@ export const loadConfig = (configFile: string): Config => {
     config.styleSheets = praseStringArray(userConfig.styleSheets);
     config.scripts = praseStringArray(userConfig.scripts);
     config.customKeys = praseStringArray(userConfig.customKeys);
+
+    const css = checkCssConfig(userConfig.css);
+    if (css) {
+      config.css = css;
+    }
   } catch {
     console.log('No configuration file exists, so default values are used.');
   }

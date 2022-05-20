@@ -12,4 +12,9 @@ module.exports = {
     'https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.0.1/mermaid.min.js',
   ],
   customKeys: ['date', 'categories', 'tags'],
+  css: {
+    type: 'sass',
+    src: 'scss/app.scss',
+    dest: 'app.css',
+  },
 };
