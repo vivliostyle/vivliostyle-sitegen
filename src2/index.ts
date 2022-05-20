@@ -6,6 +6,7 @@ import type { CreatePage } from './page';
 import { loadCreatePages } from './page';
 import { createHtml } from './markdown';
 import { copyAssets, safeMkdir } from './assets';
+import { transpileCssWithSave } from './css';
 
 /**
  * Parameters for `generateStaticSite`.
@@ -53,6 +54,11 @@ export const generateStaticSite = async ({
 
   initDestDir(config.destDir);
   copyAssets(config.srcAssetsDir, config.destDir);
+
+  if (config.css) {
+    const css = config.css;
+    await transpileCssWithSave(css.type, css.src, css.dest);
+  }
 
   const contents = await createContents(
     config.srcPagesDir,
