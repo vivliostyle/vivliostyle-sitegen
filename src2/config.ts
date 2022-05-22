@@ -158,6 +158,8 @@ export const loadConfig = (configFile: string): Config => {
 
     const css = checkCssConfig(userConfig.css);
     if (css) {
+      css.src = path.resolve(path.join(appRootDir, css.src));
+      css.dest = path.join(config.destDir, css.dest);
       config.css = css;
     }
   } catch {

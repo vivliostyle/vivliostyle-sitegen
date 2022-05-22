@@ -21,8 +21,8 @@ it('Loads user-defined configurations', () => {
     customKeys: ['date', 'categories', 'tags'],
     css: {
       type: 'sass',
-      src: 'scss/app.scss',
-      dest: 'app.css',
+      src: path.join(appRootDir, 'scss', 'app.scss'),
+      dest: path.join(appRootDir, 'public', 'app.css'),
     },
   };
 
