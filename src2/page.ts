@@ -26,7 +26,7 @@ export type CreatePageParams = {
 export type CreatePage = (params: CreatePageParams) => void;
 
 /**
- * Parameters for `CreatePages`.
+ * Parameters for `CreatePages` function.
  */
 export type CreatePagesParams = {
   /**
