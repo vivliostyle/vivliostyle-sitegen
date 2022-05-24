@@ -1,6 +1,5 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import fsAsync from 'node:fs/promises';
 
 /**
  * Creates a directory with the specified path.
@@ -57,15 +56,37 @@ export const copyFile = async (
   srcFile: string,
   srcRootDir: string,
   destRootDir: string,
-): Promise<boolean> => {
+): Promise<string> => {
   try {
     const destFile = createDestFilePath(srcFile, srcRootDir, destRootDir);
     safeMkdir(path.dirname(destFile));
-    await fsAsync.copyFile(srcFile, destFile);
+    await fs.promises.copyFile(srcFile, destFile);
+    return destFile;
+  } catch (err) {
+    console.error(err);
+    return '';
+  }
+};
 
-    return true;
-  } catch {
-    return false;
+/**
+ * Delete file in the destination directory with paths corresponding to files in the specified source directory.
+ * @param srcFile - Path of the source file.
+ * @param srcRootDir - Path of the source root directory.
+ * @param destRootDir - Path of the destination root directory.
+ * @returns Path of the destination file.
+ */
+export const deleteFile = async (
+  srcFile: string,
+  srcRootDir: string,
+  destRootDir: string,
+): Promise<string> => {
+  try {
+    const targetFile = createDestFilePath(srcFile, srcRootDir, destRootDir);
+    await fs.promises.unlink(targetFile);
+    return targetFile;
+  } catch (err) {
+    console.error(err);
+    return '';
   }
 };
 
@@ -81,16 +102,16 @@ const copyFilesRecursive = async (
 ): Promise<void> => {
   safeMkdir(destDir);
 
-  const items = await fsAsync.readdir(srcDir);
+  const items = await fs.promises.readdir(srcDir);
   for (let i = 0; i < items.length; ++i) {
     const srcItemPath = path.join(srcDir, items[i]);
-    const stat = await fsAsync.stat(srcItemPath);
+    const stat = await fs.promises.stat(srcItemPath);
     if (stat.isDirectory()) {
       copyFilesRecursive(srcItemPath, path.join(destDir, items[i]));
       continue;
     }
 
-    await fsAsync.copyFile(srcItemPath, path.join(destDir, items[i]));
+    await fs.promises.copyFile(srcItemPath, path.join(destDir, items[i]));
   }
 };
 
@@ -105,7 +126,7 @@ export const copyAssets = async (
   destDir: string,
 ): Promise<void> => {
   try {
-    const stat = await fsAsync.stat(srcDir);
+    const stat = await fs.promises.stat(srcDir);
     if (stat.isDirectory()) {
       console.log(`[Assets] ${srcDir}`);
       copyFilesRecursive(srcDir, destDir);
