@@ -7,7 +7,7 @@ it('Load default function of createPages', () => {
 
 it('Load user function of createPages', () => {
   const { isUserFunction } = loadCreatePages(
-    'src2/data/vivliostyle.sitegen.func.js',
+    'src/data/vivliostyle.sitegen.func.js',
   );
   expect(isUserFunction).toBeTruthy();
 });

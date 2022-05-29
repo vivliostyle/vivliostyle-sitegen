@@ -1,7 +1,7 @@
 import { transpileCss } from './css';
 
 it('Transpile SCSS', () => {
-  const css = transpileCss('sass', './src2/data/scss/app.scss');
+  const css = transpileCss('sass', './src/data/scss/app.scss');
   const expected = `body {
   width: 100%;
   height: 100%;
