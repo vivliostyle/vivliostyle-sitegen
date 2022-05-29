@@ -3,7 +3,7 @@ import type { Config } from './config';
 import { loadConfig } from './config';
 
 it('Loads user-defined configurations', () => {
-  const appRootDir = path.resolve('./src2/data/');
+  const appRootDir = path.resolve('./src/data/');
   const config = loadConfig(path.join(appRootDir, 'vivliostyle.sitegen.js'));
   const expected: Config = {
     srcPagesDir: path.join(appRootDir, 'pages'),

@@ -1,103 +1,63 @@
-import path from 'path';
-import fs from 'fs';
-import { Template, loadTemplates } from './template';
+import path from 'node:path';
+import fs from 'node:fs';
+import type { CssType } from './css';
 
-/** Configuration of the Sass/SCSS transpile to CSS. */
-export type SassConfig = {
-  /** Path of the Sass/SCSS file. */
+/**
+ * Configuration of the transpile AltCSS file to CSS.
+ */
+export type CssConfig = {
+  /**
+   * Type of CSS engine.
+   */
+  type: CssType;
+  /**
+   * Path of the AltCSS file.
+   */
   src: string;
-  /** Path of the transpiled CSS file. */
+  /**
+   * Path of the transpiled CSS file.
+   * Specify a path relative to the destination (site distribution) directory.
+   */
   dest: string;
 };
 
-/** Configuration of the vivliostyle-ssg. */
+/**
+ * Configuration of the vivliostyle-sitegen.
+ */
 export type Config = {
-  /** Path of the source root directory. */
-  srcRootDir: string;
-  /** Path of the page files (Markdown, ...etc) directory. */
-  pagesDir: string;
-  /** Path of the static resource directory. */
-  assetsDir: string;
-  /** Path of the Sass/SCSS files directory. */
-  sassDir: string;
-  /** Path of the site distribution directory. */
-  distDir: string;
-  /** Value of templates. key = type (from file name), value = string of EJS template. */
-  templates: Template;
-  /** Configuration of the Sass/SCSS transpile to CSS. */
-  sass: SassConfig[];
-  /** Relative path of files to be processed as `<link>` in HTML. */
-  link: string[];
-  /** Relative path of files to be processed as `<script>` in HTML. */
-  script: string[];
-  /** User data of the web site. */
+  /**
+   * Path of the page files (Markdown, ...etc) directory.
+   */
+  srcPagesDir: string;
+  /**
+   * Path of the assets (static resource) directory.
+   */
+  srcAssetsDir: string;
+  /**
+   * Path of the destination (site distribution) directory.
+   */
+  destDir: string;
+  /**
+   * User data of the web site.
+   */
   site: object;
-};
-
-/**
- * Check that the directory exists.
- * @param path - Path of the target directory.
- * @returns `true` if it exists, `false` otherwise.
- */
-const existsDir = (path: string): Boolean => {
-  if (fs.existsSync(path)) {
-    const stat = fs.statSync(path);
-    return stat.isDirectory();
-  }
-
-  return false;
-};
-
-/**
- * Parse the Sass/SCSS configuration.
- * @param value - Any value.
- * @param sassDir - Path of the Sass/SCSS files directory.
- * @param distDir - Path of the site distribution directory.
- * @returns Configuration.
- */
-const parseSassConfigValue = (
-  value: any,
-  sassDir: string,
-  distDir: string,
-): SassConfig => {
-  if (typeof value.src === 'string' && typeof value.dest === 'string') {
-    return {
-      src: path.join(sassDir, value.src),
-      dest: path.join(distDir, value.dest),
-    };
-  }
-
-  throw new Error('The element type of the "sass" array value is invalid.');
-};
-
-/**
- * Parse the Sass/SCSS configuration.
- * @param userScssConfig - User configuration.
- * @param sassDir - Path of the Sass/SCSS files directory.
- * @param distDir - Path of the site distribution directory.
- * @returns Configuration.
- */
-const parseSassConfig = (
-  userSassConfig: any,
-  sassDir: string,
-  distDir: string,
-): SassConfig[] => {
-  const sassConfig: SassConfig[] = [];
-  if (!Array.isArray(userSassConfig)) {
-    return sassConfig;
-  }
-
-  for (const config of userSassConfig) {
-    try {
-      const ret = parseSassConfigValue(config, sassDir, distDir);
-      sassConfig.push(ret);
-    } catch (err) {
-      console.error(err);
-      console.log(config);
-    }
-  }
-
-  return sassConfig;
+  /**
+   * Path collection of CSS files referenced as relative paths from the page.
+   */
+  styleSheets: string[];
+  /**
+   * Path collection of JavaScript files referenced as relative paths from the page.
+   */
+  scripts: string[];
+  /**
+   * A collection of key names to be ignored by HTML processing in VFM frontmatter.
+   * Keys specified here are not processed as HTML tags, but are stored in `custom` in `Metadata`.
+   */
+  customKeys: string[];
+  /**
+   * Configuration for transpile CSS.
+   */
+  css?: CssConfig;
 };
 
 /**
@@ -121,68 +81,90 @@ const praseStringArray = (values: any): string[] => {
 };
 
 /**
- * Merge the default config with the user config.
- * @param config - Original config.
- * @param filePath - Path of the user config file.
- * @returns Merged config.
+ * Check the CSS config.
+ * @param value - Value from user data.
+ * @returns Checked value. If the value is invalid, it is `undefined`.
  */
-const mergeConfigFromFile = (config: Config, filePath: string): Config => {
-  if (!fs.existsSync(filePath)) {
-    return config;
+const checkCssConfig = (value: any): CssConfig | undefined => {
+  return typeof value === 'object' &&
+    typeof value.type === 'string' &&
+    typeof value.src === 'string' &&
+    typeof value.dest === 'string'
+    ? (value as CssConfig)
+    : undefined;
+};
+
+/**
+ * Resolves the specified value as the path to the appropriate directory.
+ * @param baseDir - Path of the base directory.
+ * @param value - Value from user data.
+ * @param defaultDir - Path of the default directory.
+ * @returns Resolved path.
+ */
+const resolveDirPath = (baseDir: string, value: any, defaultDir: string) => {
+  if (typeof value === 'string' && value !== '') {
+    return path.resolve(path.join(baseDir, value));
   }
 
-  const userConfig = require(filePath);
-  if (typeof userConfig.site === 'object') {
-    config.site = userConfig.site;
-  }
-
-  config.sass = parseSassConfig(
-    userConfig.sass,
-    config.sassDir,
-    config.distDir,
-  );
-
-  config.link = praseStringArray(userConfig.link);
-  config.script = praseStringArray(userConfig.script);
-
-  return config;
+  return defaultDir;
 };
 
 /**
  * Load the configuration.
+ * @param configFile - Path of the configuration file.
  * @returns Configuration.
  */
-export const loadConfig = async (): Promise<Config> => {
-  const appRootDir = process.cwd();
-  const srcRootDir = path.join(appRootDir, 'src');
+export const loadConfig = (configFile: string): Config => {
   const config: Config = {
-    srcRootDir,
-    pagesDir: path.join(srcRootDir, 'pages'),
-    assetsDir: path.join(srcRootDir, 'assets'),
-    sassDir: path.join(srcRootDir, 'sass'),
-    distDir: path.join(appRootDir, 'public'),
-    templates: await loadTemplates(path.join(srcRootDir, 'templates')),
-    sass: [],
-    link: [],
-    script: [],
+    srcPagesDir: path.join(process.cwd(), 'src', 'pages'),
+    srcAssetsDir: path.join(process.cwd(), 'src', 'assets'),
+    destDir: path.join(process.cwd(), 'public'),
     site: {},
+    styleSheets: [],
+    scripts: [],
+    customKeys: [],
   };
 
-  if (!existsDir(config.pagesDir)) {
-    throw new Error(
-      'The "./src/pages/" directory does not exist at the root of the application.',
-    );
-  }
-
-  if (!existsDir(config.distDir)) {
-    fs.mkdirSync(config.distDir, { recursive: true });
-    if (!existsDir(config.distDir)) {
-      throw new Error(
-        'Created because "./public/" does not exist in the root of the application, but failed.',
-      );
+  try {
+    // Explicit file checking avoids unexpected `require` execution with implicit path resolution.
+    const resolveFilePath = path.resolve(configFile);
+    const stat = fs.statSync(resolveFilePath);
+    if (!stat.isFile()) {
+      return config;
     }
+
+    const userConfig = require(resolveFilePath);
+    const appRootDir = path.dirname(resolveFilePath);
+
+    config.srcPagesDir = resolveDirPath(
+      appRootDir,
+      userConfig.srcPagesDir,
+      config.srcPagesDir,
+    );
+    config.srcAssetsDir = resolveDirPath(
+      appRootDir,
+      userConfig.srcAssetsDir,
+      config.srcAssetsDir,
+    );
+    config.destDir = resolveDirPath(
+      appRootDir,
+      userConfig.destDir,
+      config.destDir,
+    );
+    config.site = typeof userConfig.site === 'object' ? userConfig.site : {};
+    config.styleSheets = praseStringArray(userConfig.styleSheets);
+    config.scripts = praseStringArray(userConfig.scripts);
+    config.customKeys = praseStringArray(userConfig.customKeys);
+
+    const css = checkCssConfig(userConfig.css);
+    if (css) {
+      css.src = path.resolve(path.join(appRootDir, css.src));
+      css.dest = path.join(config.destDir, css.dest);
+      config.css = css;
+    }
+  } catch {
+    console.log('No configuration file exists, so default values are used.');
   }
 
-  const configFilePath = path.join(appRootDir, 'vivliostyle.sitegen.js');
-  return mergeConfigFromFile(config, configFilePath);
+  return config;
 };
