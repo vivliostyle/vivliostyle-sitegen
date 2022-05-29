@@ -7,9 +7,10 @@ import { loadCreatePages } from './page';
 import { createHtml } from './markdown';
 import { copyAssets, safeMkdir } from './assets';
 import { transpileCssWithSave } from './css';
+import { watch } from './watch';
 
 /**
- * Parameters for `generateStaticSite`.
+ * Parameters for `sitegen` function.
  */
 export type SiteGenParams = {
   /**
@@ -46,7 +47,7 @@ const createPage: CreatePage = ({ content, template, site }): void => {
  * Generate a static site from a Markdown and resource files.
  * @param params - Parameters.
  */
-export const generateStaticSite = async ({
+export const sitegen = async ({
   mode = 'production',
 }: SiteGenParams): Promise<void> => {
   const appRootDir = process.cwd();
@@ -60,19 +61,16 @@ export const generateStaticSite = async ({
     await transpileCssWithSave(css.type, css.src, css.dest);
   }
 
-  const contents = await createContents(
-    config.srcPagesDir,
-    config.destDir,
-    config,
-  );
-
   const { createPages } = loadCreatePages(
     path.join(appRootDir, 'vivliostyle.sitegen.func.js'),
   );
 
-  createPages({ contents, createPage });
+  const contents = createPages({
+    contents: await createContents(config.srcPagesDir, config.destDir, config),
+    createPage,
+  });
 
   if (mode === 'development') {
-    // TODO: Watch mode
+    watch({ contents, createPage, createPages, config });
   }
 };
