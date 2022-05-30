@@ -10,13 +10,9 @@ import { createDestFilePath, copyFile } from './assets';
  */
 export type Content = {
   /**
-   * Path of the source Markdown file.
+   * Relation path of the HTML file in destination directory.
    */
-  markdownFilePath: string;
-  /**
-   * Path of the destination HTML file.
-   */
-  htmlFilePath: string;
+  path: string;
   /**
    * Metadata of the page.
    */
@@ -31,21 +27,19 @@ export type Content = {
  * Create content from the Markdown file.
  * @param markdownFilePath - Path of the source Markdown file.
  * @param pagesRootDir - Path of the source pages root directory.
- * @param destRootDir - Path of the destination root directory.
  * @param metadataOptions - Options of a metadata creation.
  * @returns Content.
  */
 export const createContent = async (
   markdownFilePath: string,
   pagesRootDir: string,
-  destRootDir: string,
   metadataOptions: CreateMetadataOptions = {},
 ): Promise<Content> => {
   const markdown = await fs.readFile(markdownFilePath, 'utf-8');
   const htmlFilePath = createDestFilePath(
     markdownFilePath,
     pagesRootDir,
-    destRootDir,
+    '',
     '.html',
   );
   const metadata = createMetadata(markdown, {
@@ -56,8 +50,7 @@ export const createContent = async (
   });
 
   return {
-    markdownFilePath,
-    htmlFilePath,
+    path: htmlFilePath,
     metadata,
     markdown,
   };
@@ -94,12 +87,7 @@ const createContentsRecursive = async (
       contents = [...contents, ...results];
     } else if (path.extname(item) === '.md') {
       contents.push(
-        await createContent(
-          itemPath,
-          pagesRootDir,
-          destRootDir,
-          metadataOptions,
-        ),
+        await createContent(itemPath, pagesRootDir, metadataOptions),
       );
     } else {
       await copyFile(itemPath, pagesRootDir, destRootDir);

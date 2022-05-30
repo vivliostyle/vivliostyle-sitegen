@@ -20,8 +20,7 @@ it('createPages', () => {
     contents: [
       {
         markdown: 'Text',
-        markdownFilePath: '',
-        htmlFilePath: '',
+        path: '',
         metadata: {},
       },
     ],

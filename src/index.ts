@@ -35,15 +35,6 @@ const initDestDir = (dir: string): boolean => {
 };
 
 /**
- * Create page from content information.
- * @param params - Parameters.
- */
-const createPage: CreatePage = ({ content, template, site }): void => {
-  const html = createHtml(content.markdown, content.metadata, template, site);
-  fs.writeFileSync(content.htmlFilePath, html);
-};
-
-/**
  * Generate a static site from a Markdown and resource files.
  * @param params - Parameters.
  */
@@ -64,6 +55,16 @@ export const sitegen = async ({
   const { createPages } = loadCreatePages(
     path.join(appRootDir, 'vivliostyle.sitegen.func.js'),
   );
+
+  /**
+   * Create page from content information.
+   * Depends on `config.destDir` to output HTML files.
+   * @param params - Parameters.
+   */
+  const createPage: CreatePage = ({ content, template, site }): void => {
+    const html = createHtml(content.markdown, content.metadata, template, site);
+    fs.writeFileSync(path.join(config.destDir, content.path), html);
+  };
 
   const contents = createPages({
     contents: await createContents(config.srcPagesDir, config.destDir, config),
