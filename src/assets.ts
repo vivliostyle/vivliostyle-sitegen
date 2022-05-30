@@ -19,6 +19,7 @@ export const safeMkdir = (dir: string): boolean => {
 
 /**
  * Create the path of destination file.
+ * If `destRootDir` is empty, returns the path relative to `srcFile` in `srcRootDir`.
  * @param srcFile - Path of the source file.
  * @param srcRootDir - Path of the source root directory.
  * @param destRootDir - Path of the destination root directory.

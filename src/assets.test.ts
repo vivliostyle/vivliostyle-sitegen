@@ -22,3 +22,15 @@ it('Create destination file path with extension name', () => {
 
   expect(filePath).toBe(expected);
 });
+
+it('Create relative path', () => {
+  const filePath = createDestFilePath(
+    '/src/pages/blog/sample.md',
+    '/src/pages',
+    '',
+    '.html',
+  );
+  const expected = 'blog/sample.html';
+
+  expect(filePath).toBe(expected);
+});
