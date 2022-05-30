@@ -5,7 +5,7 @@ import type { Config, CssConfig } from './config';
 import type { Content } from './content';
 import type { CreatePage, CreatePages } from './page';
 import { transpileCssWithSave } from './css';
-import { copyFile, deleteFile } from './assets';
+import { copyFile, deleteFile, createDestFilePath } from './assets';
 import { createContent } from './content';
 
 /**
@@ -100,9 +100,7 @@ const addPageItem = async (
   }
 
   const contents = [...srcContents];
-  contents.push(
-    await createContent(filePath, config.srcPagesDir, config.destDir, config),
-  );
+  contents.push(await createContent(filePath, config.srcPagesDir, config));
   return createPages({ contents, createPage });
 };
 
@@ -128,13 +126,14 @@ const updatePageItem = async (
 
   const contents = [...srcContents];
   for (let i = 0; i < contents.length; ++i) {
-    if (filePath === contents[i].markdownFilePath) {
-      contents[i] = await createContent(
-        filePath,
-        config.srcPagesDir,
-        config.destDir,
-        config,
-      );
+    const htmlPath = createDestFilePath(
+      filePath,
+      config.srcPagesDir,
+      '',
+      '.html',
+    );
+    if (htmlPath === contents[i].path) {
+      contents[i] = await createContent(filePath, config.srcPagesDir, config);
       break;
     }
   }
@@ -164,7 +163,13 @@ const deletePageItem = async (
 
   const contents = [...srcContents];
   for (let i = 0; i < contents.length; ++i) {
-    if (filePath === contents[i].markdownFilePath) {
+    const htmlPath = createDestFilePath(
+      filePath,
+      config.srcPagesDir,
+      '',
+      '.html',
+    );
+    if (htmlPath === contents[i].path) {
       contents.splice(i, 1);
       break;
     }
